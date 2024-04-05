@@ -516,18 +516,24 @@ impl CoreBluetoothInternal {
     }
 
     async fn on_discovered_peripheral(&mut self, peripheral: StrongPtr) {
+        println!("discovered peripheral");
         let uuid = nsuuid_to_uuid(cb::peer_identifier(*peripheral));
         let name = nsstring_to_string(cb::peripheral_name(*peripheral));
         if self.peripherals.contains_key(&uuid) {
+            println!("primary statment");
             if let Some(name) = name {
                 self.dispatch_event(CoreBluetoothEvent::DeviceUpdated { uuid, name })
                     .await;
             }
         } else {
+            println!("inserting into peripherals");
             // Create our channels
             let (event_sender, event_receiver) = mpsc::channel(256);
             self.peripherals
                 .insert(uuid, CBPeripheral::new(peripheral, event_sender));
+            println!("peripheral {} count: {}", uuid.to_string(), self.peripherals.len());
+            let nname = name.clone().unwrap();
+            println!("name {}", nname);
             self.dispatch_event(CoreBluetoothEvent::DeviceDiscovered {
                 uuid,
                 name,

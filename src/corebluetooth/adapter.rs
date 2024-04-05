@@ -48,6 +48,7 @@ impl Adapter {
                         name,
                         event_receiver,
                     } => {
+                        println!("Device discovered corebluetooth event received");
                         manager_clone.add_peripheral(Peripheral::new(
                             uuid,
                             name,
@@ -87,12 +88,11 @@ impl Central for Adapter {
         Ok(self.manager.event_stream())
     }
 
-    async fn connected_peripherals(&self, filter: ScanFilter) -> Result<()> {
+    async fn connected_peripherals(&self, filter: ScanFilter) -> Result<Vec<Peripheral>> {
         self.sender
             .to_owned()
-            .send(CoreBluetoothMessage::RetrieveConnectedPeripherals { filter })
-            .await?;
-        Ok(())
+            .send(CoreBluetoothMessage::RetrieveConnectedPeripherals { filter }).await?;
+        return Ok(self.manager.peripherals());
     }
 
     async fn start_scan(&self, filter: ScanFilter) -> Result<()> {

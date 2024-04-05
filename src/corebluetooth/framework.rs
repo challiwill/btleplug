@@ -183,29 +183,17 @@ pub mod cb {
             msg_send![cbcentralmanager, retrieveConnectedPeripheralsWithServices:service_uuids]
         };
         let peripheral_count = cocoa::foundation::NSArray::count(connected_peripherals);
-        println!("peripherals list: {:?}", peripheral_count);
         let peripheral: id = unsafe { cocoa::foundation::NSArray::objectAtIndex(connected_peripherals, 0) };
-        println!("peripheral {}", peripheral_debug(peripheral));
-        // for peripheral in *peripherals_list {
+        /* TODO populate self.manager.peripherals with these peripherals */
         //     let held_peripheral = unsafe { StrongPtr::retain(peripherals_list[0]) };
-            // crate::corebluetooth::central_delegate::CentralDelegate::send_delegate_event(
-            //     DELEGATE,
-            //     CentralDelegateEvent::DiscoveredPeripheral {
-            //         cbperipheral: held_peripheral,
-            //     },
-            // );
-        // }
-
-        // let held_peripherals = unsafe { StrongPtr::retain(peripherals_list) };
-        // let mouthpad:&id = peripherals.first().unwrap();
-        // let held_peripheral = unsafe { StrongPtr::retain(mouthpad) };
-        // self.delegate.on_discovered_peripheral(held_peripheral);
-        // crate::corebluetooth::central_delegate::CentralDelegate::send_delegate_event(
-        //     &self.delegate,
-        //     CentralDelegateEvent::DiscoveredPeripheral {
-        //         cbperipheral: held_peripheral,
-        //     },
-        // );
+        let held_peripheral = unsafe { StrongPtr::retain(peripheral) };
+        println!("peripheral found: {:?}", peripheral_debug(peripheral));
+        crate::corebluetooth::central_delegate::CentralDelegate::send_delegate_event(
+            &mut *DELEGATE,
+            CentralDelegateEvent::DiscoveredPeripheral {
+                cbperipheral: held_peripheral,
+            },
+        );
     }
 
     pub fn centralmanager_scanforperipheralswithservices_options(
