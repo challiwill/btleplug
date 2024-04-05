@@ -15,7 +15,14 @@
 // <LICENSE.md or https://opensource.org/licenses/BSD-3-Clause>.
 // This file may not be copied, modified, or distributed except
 // according to those terms.
-
+use super::{
+    utils::{
+        core_bluetooth::{cbuuid_to_uuid, characteristic_debug, peripheral_debug, service_debug},
+        nsdata_to_vec,
+        nsstring::nsstring_to_string,
+        nsuuid_to_uuid,
+    },
+};
 use cocoa::{
     base::{id, nil},
     foundation::{NSArray, NSData, NSDictionary, NSString, NSUInteger},
@@ -23,6 +30,11 @@ use cocoa::{
 use objc::runtime::BOOL;
 use objc::{class, msg_send, sel, sel_impl};
 use std::os::raw::{c_char, c_int, c_uint};
+use objc::{
+    declare::ClassDecl,
+    rc::StrongPtr,
+    runtime::{Class, Object, Protocol, Sel},
+};
 
 pub mod ns {
     use super::*;
@@ -108,6 +120,10 @@ pub mod ns {
 pub mod cb {
     use super::*;
     use std::ffi::CString;
+    use libc::uint16_t;
+    use log::trace;
+    use objc::rc::StrongPtr;
+    use crate::corebluetooth::central_delegate::CentralDelegateEvent;
 
     #[allow(non_camel_case_types)]
     pub enum dispatch_object_s {}
@@ -142,15 +158,54 @@ pub mod cb {
 
     // CBCentralManager
 
+    static mut DELEGATE: id = nil;
     pub fn centralmanager(delegate: id /*CBCentralManagerDelegate* */) -> id /*CBCentralManager* */
     {
         let label = CString::new("CBqueue").unwrap();
         unsafe {
             let cbcentralmanager: id = msg_send![class!(CBCentralManager), alloc];
             let queue = dispatch_queue_create(label.as_ptr(), DISPATCH_QUEUE_SERIAL);
-
+            DELEGATE = delegate;
             msg_send![cbcentralmanager, initWithDelegate:delegate queue:queue]
         }
+    }
+
+    pub unsafe fn centralmanager_retrieveconnectedperipheralswithservices(
+        cbcentralmanager: id,
+        service_uuids: id, /* NSArray<CBUUID *> */
+    ) {
+        /*
+         * - look into what the debug functions do for printing (eg peripheral_debug())
+         * - look into just using the received pointer as a peripheral.. perhaps objc lists don't have any preamble
+         * - consider how to receive a object type and then turn it from the objc list into a rust vector (wasn't there a helper somewhere for that?)
+         */
+        let connected_peripherals: id  /* what is this? */  = unsafe {
+            msg_send![cbcentralmanager, retrieveConnectedPeripheralsWithServices:service_uuids]
+        };
+        let peripheral_count = cocoa::foundation::NSArray::count(connected_peripherals);
+        println!("peripherals list: {:?}", peripheral_count);
+        let peripheral: id = unsafe { cocoa::foundation::NSArray::objectAtIndex(connected_peripherals, 0) };
+        println!("peripheral {}", peripheral_debug(peripheral));
+        // for peripheral in *peripherals_list {
+        //     let held_peripheral = unsafe { StrongPtr::retain(peripherals_list[0]) };
+            // crate::corebluetooth::central_delegate::CentralDelegate::send_delegate_event(
+            //     DELEGATE,
+            //     CentralDelegateEvent::DiscoveredPeripheral {
+            //         cbperipheral: held_peripheral,
+            //     },
+            // );
+        // }
+
+        // let held_peripherals = unsafe { StrongPtr::retain(peripherals_list) };
+        // let mouthpad:&id = peripherals.first().unwrap();
+        // let held_peripheral = unsafe { StrongPtr::retain(mouthpad) };
+        // self.delegate.on_discovered_peripheral(held_peripheral);
+        // crate::corebluetooth::central_delegate::CentralDelegate::send_delegate_event(
+        //     &self.delegate,
+        //     CentralDelegateEvent::DiscoveredPeripheral {
+        //         cbperipheral: held_peripheral,
+        //     },
+        // );
     }
 
     pub fn centralmanager_scanforperipheralswithservices_options(

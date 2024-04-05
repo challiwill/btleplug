@@ -351,6 +351,9 @@ impl Debug for CoreBluetoothInternal {
 
 #[derive(Debug)]
 pub enum CoreBluetoothMessage {
+    RetrieveConnectedPeripherals {
+        filter: ScanFilter,
+    },
     StartScanning {
         filter: ScanFilter,
     },
@@ -1081,6 +1084,7 @@ impl CoreBluetoothInternal {
             adapter_msg = self.message_receiver.select_next_some() => {
                 trace!("Adapter message!");
                 match adapter_msg {
+                    CoreBluetoothMessage::RetrieveConnectedPeripherals{filter} => self.retrieve_connected_peripherals(filter),
                     CoreBluetoothMessage::StartScanning{filter} => self.start_discovery(filter),
                     CoreBluetoothMessage::StopScanning => self.stop_discovery(),
                     CoreBluetoothMessage::ConnectDevice{peripheral_uuid, future} => {
@@ -1122,6 +1126,12 @@ impl CoreBluetoothInternal {
                 };
             }
         }
+    }
+
+    fn retrieve_connected_peripherals(&mut self, filter: ScanFilter) {
+        println!("BluetoothAdapter::retrieve_connected_peripherals");
+        let service_uuids = scan_filter_to_service_uuids(filter);
+        unsafe { cb::centralmanager_retrieveconnectedperipheralswithservices(*self.manager, service_uuids) };
     }
 
     fn start_discovery(&mut self, filter: ScanFilter) {

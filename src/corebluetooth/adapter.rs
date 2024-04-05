@@ -87,6 +87,14 @@ impl Central for Adapter {
         Ok(self.manager.event_stream())
     }
 
+    async fn connected_peripherals(&self, filter: ScanFilter) -> Result<()> {
+        self.sender
+            .to_owned()
+            .send(CoreBluetoothMessage::RetrieveConnectedPeripherals { filter })
+            .await?;
+        Ok(())
+    }
+
     async fn start_scan(&self, filter: ScanFilter) -> Result<()> {
         self.sender
             .to_owned()

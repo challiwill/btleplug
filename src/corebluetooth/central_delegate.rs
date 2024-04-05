@@ -402,7 +402,7 @@ pub mod CentralDelegate {
         }
     }
 
-    fn send_delegate_event(delegate: &mut Object, event: CentralDelegateEvent) {
+    pub fn send_delegate_event(delegate: &mut Object, event: CentralDelegateEvent) {
         let mut sender = delegate_get_sender_clone(delegate);
         futures::executor::block_on(async {
             if let Err(e) = sender.send(event).await {
