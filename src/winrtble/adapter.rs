@@ -55,6 +55,10 @@ impl Central for Adapter {
         Ok(self.manager.event_stream())
     }
 
+    async fn connected_peripherals(&self, filter: ScanFilter) -> Result<()> {
+        self.start_scan(filter).await;
+    }
+
     async fn start_scan(&self, filter: ScanFilter) -> Result<()> {
         let watcher = self.watcher.lock().unwrap();
         let manager = self.manager.clone();
