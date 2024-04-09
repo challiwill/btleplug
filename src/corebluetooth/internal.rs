@@ -22,7 +22,7 @@ use super::{
     },
 };
 use crate::api::{
-    bleuuid::uuid_from_u16, CharPropFlags, Characteristic, Descriptor, ScanFilter, Service,
+    CharPropFlags, Characteristic, Descriptor, ScanFilter, Service,
     WriteType,
 };
 use crate::Error;

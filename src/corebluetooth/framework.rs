@@ -15,13 +15,8 @@
 // <LICENSE.md or https://opensource.org/licenses/BSD-3-Clause>.
 // This file may not be copied, modified, or distributed except
 // according to those terms.
-use super::{
-    utils::{
-        core_bluetooth::{cbuuid_to_uuid, characteristic_debug, peripheral_debug, service_debug},
-        nsdata_to_vec,
-        nsstring::nsstring_to_string,
-        nsuuid_to_uuid,
-    },
+use super::utils::{
+    core_bluetooth::{peripheral_debug},
 };
 use cocoa::{
     base::{id, nil},
@@ -29,12 +24,12 @@ use cocoa::{
 };
 use objc::runtime::BOOL;
 use objc::{class, msg_send, sel, sel_impl};
-use std::os::raw::{c_char, c_int, c_uint};
 use objc::{
     declare::ClassDecl,
     rc::StrongPtr,
     runtime::{Class, Object, Protocol, Sel},
 };
+use std::os::raw::{c_char, c_int, c_uint};
 
 pub mod ns {
     use super::*;
@@ -119,11 +114,9 @@ pub mod ns {
 
 pub mod cb {
     use super::*;
-    use std::ffi::CString;
-    use libc::uint16_t;
-    use log::trace;
-    use objc::rc::StrongPtr;
     use crate::corebluetooth::central_delegate::CentralDelegateEvent;
+    use objc::rc::StrongPtr;
+    use std::ffi::CString;
 
     #[allow(non_camel_case_types)]
     pub enum dispatch_object_s {}
