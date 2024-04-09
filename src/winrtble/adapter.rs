@@ -56,7 +56,7 @@ impl Central for Adapter {
     }
 
     async fn connected_peripherals(&self, filter: ScanFilter) -> Result<()> {
-        self.start_scan(filter).await;
+        return self.start_scan(filter);
     }
 
     async fn start_scan(&self, filter: ScanFilter) -> Result<()> {
