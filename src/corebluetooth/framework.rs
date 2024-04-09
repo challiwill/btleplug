@@ -163,7 +163,7 @@ pub mod cb {
         }
     }
 
-    pub unsafe fn centralmanager_retrieveconnectedperipheralswithservices(
+    pub fn centralmanager_retrieveconnectedperipheralswithservices(
         cbcentralmanager: id,
         service_uuids: id, /* NSArray<CBUUID *> */
     ) {
@@ -175,18 +175,21 @@ pub mod cb {
         let connected_peripherals: id  /* what is this? */  = unsafe {
             msg_send![cbcentralmanager, retrieveConnectedPeripheralsWithServices:service_uuids]
         };
-        let peripheral_count = cocoa::foundation::NSArray::count(connected_peripherals);
-        let peripheral: id = unsafe { cocoa::foundation::NSArray::objectAtIndex(connected_peripherals, 0) };
+        // let peripheral_count = unsafe { cocoa::foundation::NSArray::count(connected_peripherals)};
+        let peripheral: id =
+            unsafe { cocoa::foundation::NSArray::objectAtIndex(connected_peripherals, 0) };
         /* TODO populate self.manager.peripherals with these peripherals */
-        //     let held_peripheral = unsafe { StrongPtr::retain(peripherals_list[0]) };
         let held_peripheral = unsafe { StrongPtr::retain(peripheral) };
         println!("peripheral found: {:?}", peripheral_debug(peripheral));
-        crate::corebluetooth::central_delegate::CentralDelegate::send_delegate_event(
-            &mut *DELEGATE,
-            CentralDelegateEvent::DiscoveredPeripheral {
-                cbperipheral: held_peripheral,
-            },
-        );
+        // TODO this part doesn't seem to be working all the way through.
+        unsafe {
+            crate::corebluetooth::central_delegate::CentralDelegate::send_delegate_event(
+                &mut *DELEGATE,
+                CentralDelegateEvent::DiscoveredPeripheral {
+                    cbperipheral: held_peripheral,
+                },
+            );
+        }
     }
 
     pub fn centralmanager_scanforperipheralswithservices_options(

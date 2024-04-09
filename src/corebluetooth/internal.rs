@@ -1137,7 +1137,7 @@ impl CoreBluetoothInternal {
     fn retrieve_connected_peripherals(&mut self, filter: ScanFilter) {
         println!("BluetoothAdapter::retrieve_connected_peripherals");
         let service_uuids = scan_filter_to_service_uuids(filter);
-        unsafe { cb::centralmanager_retrieveconnectedperipheralswithservices(*self.manager, service_uuids) };
+        cb::centralmanager_retrieveconnectedperipheralswithservices(*self.manager, service_uuids);
     }
 
     fn start_discovery(&mut self, filter: ScanFilter) {
