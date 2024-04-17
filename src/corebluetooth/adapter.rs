@@ -94,6 +94,7 @@ impl Central for Adapter {
             .send(CoreBluetoothMessage::RetrieveConnectedPeripherals { filter }).await?;
         // TODO this really should be returning the peripheral but right now I just don't
         //      know how to get that to happen.
+        /* TODO now that the device gets added to peripherals, it should be possible to return it directly. */
         Ok(())
     }
 
