@@ -92,6 +92,8 @@ impl Central for Adapter {
         self.sender
             .to_owned()
             .send(CoreBluetoothMessage::RetrieveConnectedPeripherals { filter }).await?;
+        // TODO this really should be returning the peripheral but right now I just don't
+        //      know how to get that to happen.
         Ok(())
     }
 

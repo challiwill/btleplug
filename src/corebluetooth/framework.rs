@@ -166,7 +166,7 @@ pub mod cb {
     pub fn centralmanager_retrieveconnectedperipheralswithservices(
         cbcentralmanager: id,
         service_uuids: id, /* NSArray<CBUUID *> */
-    ) {
+    ) -> id {
         /*
          * - look into what the debug functions do for printing (eg peripheral_debug())
          * - look into just using the received pointer as a peripheral.. perhaps objc lists don't have any preamble
@@ -176,20 +176,12 @@ pub mod cb {
             msg_send![cbcentralmanager, retrieveConnectedPeripheralsWithServices:service_uuids]
         };
         // let peripheral_count = unsafe { cocoa::foundation::NSArray::count(connected_peripherals)};
+        /* Only retrieving first peripheral */
         let peripheral: id =
             unsafe { cocoa::foundation::NSArray::objectAtIndex(connected_peripherals, 0) };
         /* TODO populate self.manager.peripherals with these peripherals */
-        let held_peripheral = unsafe { StrongPtr::retain(peripheral) };
         println!("peripheral found: {:?}", peripheral_debug(peripheral));
-        // TODO this part doesn't seem to be working all the way through.
-        unsafe {
-            crate::corebluetooth::central_delegate::CentralDelegate::send_delegate_event(
-                &mut *DELEGATE,
-                CentralDelegateEvent::DiscoveredPeripheral {
-                    cbperipheral: held_peripheral,
-                },
-            );
-        }
+        peripheral
     }
 
     pub fn centralmanager_scanforperipheralswithservices_options(

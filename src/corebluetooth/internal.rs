@@ -31,7 +31,7 @@ use cocoa::{
     foundation::NSArray,
 };
 use futures::channel::mpsc::{self, Receiver, Sender};
-use futures::select;
+use futures::{select, TryFutureExt};
 use futures::sink::SinkExt;
 use futures::stream::{Fuse, StreamExt};
 use log::{error, trace, warn};
@@ -512,6 +512,34 @@ impl CoreBluetoothInternal {
             {
                 error!("Error sending notification event: {}", e);
             }
+        }
+    }
+
+
+    fn retrieve_connected_peripherals(&mut self, filter: ScanFilter) {
+        println!("BluetoothAdapter::retrieve_connected_peripherals");
+        let service_uuids = scan_filter_to_service_uuids(filter);
+        let peripheral: id  = cb::centralmanager_retrieveconnectedperipheralswithservices(*self.manager, service_uuids);
+        let held_peripheral = unsafe { StrongPtr::retain(peripheral) };
+
+        let uuid = nsuuid_to_uuid(cb::peer_identifier(*held_peripheral));
+        let name = nsstring_to_string(cb::peripheral_name(*held_peripheral));
+
+        println!("inserting into peripherals");
+        // Create our channels
+        let (event_sender, event_receiver) = mpsc::channel(256);
+        self.peripherals
+            .insert(uuid, CBPeripheral::new(held_peripheral, event_sender));
+        println!("peripheral {} count: {}", uuid.to_string(), self.peripherals.len());
+        let nname = name.clone().unwrap();
+        println!("name {}", nname);
+        match self.event_sender.try_send(CoreBluetoothEvent::DeviceDiscovered {
+            uuid,
+            name,
+            event_receiver,
+        }) {
+            Ok(_) => println!("event sent"),
+            Err(e) => println!("error sending event: {}", e),
         }
     }
 
@@ -1132,12 +1160,6 @@ impl CoreBluetoothInternal {
                 };
             }
         }
-    }
-
-    fn retrieve_connected_peripherals(&mut self, filter: ScanFilter) {
-        println!("BluetoothAdapter::retrieve_connected_peripherals");
-        let service_uuids = scan_filter_to_service_uuids(filter);
-        cb::centralmanager_retrieveconnectedperipheralswithservices(*self.manager, service_uuids);
     }
 
     fn start_discovery(&mut self, filter: ScanFilter) {
