@@ -172,14 +172,16 @@ pub mod cb {
          * - look into just using the received pointer as a peripheral.. perhaps objc lists don't have any preamble
          * - consider how to receive a object type and then turn it from the objc list into a rust vector (wasn't there a helper somewhere for that?)
          */
-        let connected_peripherals: id  /* what is this? */  = unsafe {
+        let connected_peripherals: id  /* what is this? */ = unsafe {
             msg_send![cbcentralmanager, retrieveConnectedPeripheralsWithServices:service_uuids]
         };
-        // let peripheral_count = unsafe { cocoa::foundation::NSArray::count(connected_peripherals)};
         /* Only retrieving first peripheral */
-        let peripheral: id =
-            unsafe { cocoa::foundation::NSArray::objectAtIndex(connected_peripherals, 0) };
-        /* TODO populate self.manager.peripherals with these peripherals */
+        let peripheral_count = ns::array_count(connected_peripherals);
+        if peripheral_count == 0 {
+            println!("No peripheral found");
+            return nil;
+        }
+        let peripheral: id = ns::array_objectatindex(connected_peripherals, 0);
         println!("peripheral found: {:?}", peripheral_debug(peripheral));
         peripheral
     }

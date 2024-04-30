@@ -520,6 +520,9 @@ impl CoreBluetoothInternal {
         println!("BluetoothAdapter::retrieve_connected_peripherals");
         let service_uuids = scan_filter_to_service_uuids(filter);
         let peripheral: id  = cb::centralmanager_retrieveconnectedperipheralswithservices(*self.manager, service_uuids);
+        if (peripheral == nil) {
+            return;
+        }
         let held_peripheral = unsafe { StrongPtr::retain(peripheral) };
 
         let uuid = nsuuid_to_uuid(cb::peer_identifier(*held_peripheral));
