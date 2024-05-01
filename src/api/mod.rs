@@ -333,8 +333,8 @@ pub trait Central: Send + Sync + Clone {
     /// occur for this Central module. See [`CentralEvent`] for the full set of possible events.
     async fn events(&self) -> Result<Pin<Box<dyn Stream<Item = CentralEvent> + Send>>>;
 
-    // Retrieve connected peripherals matching the given filter. Same filter rules apply as for
-    // start_scan.
+    /// Retrieve connected peripherals matching the given filter. Same filter rules apply as for
+    /// start_scan.
     async fn connected_peripherals(&self, filter: ScanFilter) -> Result<()>;
 
     /// Starts a scan for BLE devices. This scan will generally continue until explicitly stopped,
