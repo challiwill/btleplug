@@ -59,7 +59,6 @@ where
     }
 
     pub fn add_peripheral(&self, peripheral: PeripheralType) {
-        println!("adding peripheral");
         assert!(
             !self.peripherals.contains_key(&peripheral.id()),
             "Adding a peripheral that's already in the map."

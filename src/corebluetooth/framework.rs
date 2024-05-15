@@ -178,11 +178,9 @@ pub mod cb {
         /* Only retrieving first peripheral */
         let peripheral_count = ns::array_count(connected_peripherals);
         if peripheral_count == 0 {
-            println!("No peripheral found");
             return nil;
         }
         let peripheral: id = ns::array_objectatindex(connected_peripherals, 0);
-        println!("peripheral found: {:?}", peripheral_debug(peripheral));
         peripheral
     }
 

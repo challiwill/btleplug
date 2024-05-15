@@ -517,7 +517,6 @@ impl CoreBluetoothInternal {
 
 
     fn retrieve_connected_peripherals(&mut self, filter: ScanFilter) {
-        println!("BluetoothAdapter::retrieve_connected_peripherals");
         let service_uuids = scan_filter_to_service_uuids(filter);
         let peripheral: id  = cb::centralmanager_retrieveconnectedperipheralswithservices(*self.manager, service_uuids);
         if (peripheral == nil) {
@@ -528,43 +527,34 @@ impl CoreBluetoothInternal {
         let uuid = nsuuid_to_uuid(cb::peer_identifier(*held_peripheral));
         let name = nsstring_to_string(cb::peripheral_name(*held_peripheral));
 
-        println!("inserting into peripherals");
         // Create our channels
         let (event_sender, event_receiver) = mpsc::channel(256);
         self.peripherals
             .insert(uuid, CBPeripheral::new(held_peripheral, event_sender));
-        println!("peripheral {} count: {}", uuid.to_string(), self.peripherals.len());
-        let nname = name.clone().unwrap();
-        println!("name {}", nname);
+        // TODO should I be using dispatch_event()?
         match self.event_sender.try_send(CoreBluetoothEvent::DeviceDiscovered {
             uuid,
             name,
             event_receiver,
         }) {
-            Ok(_) => println!("event sent"),
-            Err(e) => println!("error sending event: {}", e),
+            Ok(_) => (),
+            Err(e) => error!("error sending event: {}", e),
         }
     }
 
     async fn on_discovered_peripheral(&mut self, peripheral: StrongPtr) {
-        println!("discovered peripheral");
         let uuid = nsuuid_to_uuid(cb::peer_identifier(*peripheral));
         let name = nsstring_to_string(cb::peripheral_name(*peripheral));
         if self.peripherals.contains_key(&uuid) {
-            println!("primary statment");
             if let Some(name) = name {
                 self.dispatch_event(CoreBluetoothEvent::DeviceUpdated { uuid, name })
                     .await;
             }
         } else {
-            println!("inserting into peripherals");
             // Create our channels
             let (event_sender, event_receiver) = mpsc::channel(256);
             self.peripherals
                 .insert(uuid, CBPeripheral::new(peripheral, event_sender));
-            println!("peripheral {} count: {}", uuid.to_string(), self.peripherals.len());
-            let nname = name.clone().unwrap();
-            println!("name {}", nname);
             self.dispatch_event(CoreBluetoothEvent::DeviceDiscovered {
                 uuid,
                 name,

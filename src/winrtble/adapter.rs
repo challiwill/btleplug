@@ -59,8 +59,7 @@ impl Central for Adapter {
     }
 
     async fn connected_peripherals(&self, filter: ScanFilter) -> Result<()> {
-        /* TODO unwrap is unsafe. */
-        /* TODO filter for MouthPad and return that. */
+        /* TODO unwrap is likely unsafe. */
         let service_filter = filter.services[0];
         let devices = match DeviceInformation::FindAllAsyncAqsFilter(
             &BluetoothLEDevice::GetDeviceSelector().unwrap(),
@@ -77,18 +76,18 @@ impl Central for Adapter {
 
         for device in devices {
             let device_id = device.Id().unwrap();
-            println!("Device ID: {:?}", device_id);
+            trace!("Device ID: {:?}", device_id);
             let ble_device = match BluetoothLEDevice::FromIdAsync(&device_id) {
                 Ok(ble_device) => ble_device,
                 Err(e) => {
-                    println!("Error getting ble device from id: {:?}", e);
+                    error!("Error getting ble device from id: {:?}", e);
                     continue;
                 }
             };
             let ble_device = match ble_device.get() {
                 Ok(ble_device) => ble_device,
                 Err(e) => {
-                    println!("Error getting ble device: {:?}", e);
+                    error!("Error getting ble device: {:?}", e);
                     continue;
                 }
             };
@@ -99,9 +98,8 @@ impl Central for Adapter {
                 .unwrap()
                 .Services()
                 .unwrap();
-            println!("got services");
             for service in services {
-                println!("Service: {:?}", service.Uuid().unwrap());
+                trace!("Service: {:?}", service.Uuid().unwrap());
                 let service_uuid = Uuid::from_u128(service.Uuid().unwrap().to_u128());
                 if service_uuid == service_filter {
                     let bluetooth_address = ble_device.BluetoothAddress().unwrap();

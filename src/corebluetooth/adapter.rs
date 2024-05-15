@@ -48,7 +48,6 @@ impl Adapter {
                         name,
                         event_receiver,
                     } => {
-                        println!("Device discovered corebluetooth event received");
                         manager_clone.add_peripheral(Peripheral::new(
                             uuid,
                             name,
