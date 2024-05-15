@@ -26,6 +26,7 @@ use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use windows::Devices::Bluetooth::BluetoothLEDevice;
 use windows::Devices::Enumeration::DeviceInformation;
+use log::{error, trace};
 
 /// Implementation of [api::Central](crate::api::Central).
 #[derive(Clone)]
