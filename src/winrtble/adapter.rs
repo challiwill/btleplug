@@ -26,7 +26,7 @@ use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use windows::Devices::Bluetooth::BluetoothLEDevice;
 use windows::Devices::Enumeration::DeviceInformation;
-use log::{error, trace};
+use log::{trace, warn};
 
 /// Implementation of [api::Central](crate::api::Central).
 #[derive(Clone)]
@@ -81,14 +81,14 @@ impl Central for Adapter {
             let ble_device = match BluetoothLEDevice::FromIdAsync(&device_id) {
                 Ok(ble_device) => ble_device,
                 Err(e) => {
-                    error!("Error getting ble device from id: {:?}", e);
+                    warn!("Error getting ble device from id: {:?}", e);
                     continue;
                 }
             };
             let ble_device = match ble_device.get() {
                 Ok(ble_device) => ble_device,
                 Err(e) => {
-                    error!("Error getting ble device: {:?}", e);
+                    warn!("Error getting ble device: {:?}", e);
                     continue;
                 }
             };
