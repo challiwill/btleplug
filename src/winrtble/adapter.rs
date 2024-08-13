@@ -26,7 +26,7 @@ use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use windows::Devices::Bluetooth::BluetoothLEDevice;
 use windows::Devices::Enumeration::DeviceInformation;
-use log::{trace, warn};
+use log::{debug, trace, warn};
 
 /// Implementation of [api::Central](crate::api::Central).
 #[derive(Clone)]
@@ -105,11 +105,18 @@ impl Central for Adapter {
                 if service_uuid == service_filter {
                     let bluetooth_address = ble_device.BluetoothAddress().unwrap();
                     let address: BDAddr = bluetooth_address.try_into().unwrap();
-                    let peripheral = Peripheral::new(Arc::downgrade(&manager), address);
                     // TODO this populates things like the device name
                     // peripheral.update_properties(args);
-                    manager.add_peripheral(peripheral);
-                    manager.emit(CentralEvent::DeviceDiscovered(address.into()));
+                    match manager.peripheral_mut(&address.into()) {
+                        Some(_) => {
+                            debug!("Skipping over existing peripheral: {:?}", address);
+                        }
+                        None => {
+                            let peripheral = Peripheral::new(Arc::downgrade(&manager), address);
+                            manager.add_peripheral(peripheral);
+                            manager.emit(CentralEvent::DeviceDiscovered(address.into()));
+                        }
+                    }
                     return Ok(());
                 }
             }
@@ -125,14 +132,19 @@ impl Central for Adapter {
             Box::new(move |args| {
                 let bluetooth_address = args.BluetoothAddress().unwrap();
                 let address: BDAddr = bluetooth_address.try_into().unwrap();
-                if let Some(mut entry) = manager.peripheral_mut(&address.into()) {
-                    entry.value_mut().update_properties(args);
-                    manager.emit(CentralEvent::DeviceUpdated(address.into()));
-                } else {
-                    let peripheral = Peripheral::new(Arc::downgrade(&manager), address);
-                    peripheral.update_properties(args);
-                    manager.add_peripheral(peripheral);
-                    manager.emit(CentralEvent::DeviceDiscovered(address.into()));
+                match manager.peripheral_mut(&address.into()) {
+                    Some(mut peripheral) => {
+                        println!("Updating existing peripheral: {:?}", address);
+                        peripheral.value_mut().update_properties(args);
+                        manager.emit(CentralEvent::DeviceUpdated(address.into()));
+                    }
+                    None => {
+                        println!("Trying to add new peripheral: {:?}", address);
+                        let peripheral = Peripheral::new(Arc::downgrade(&manager), address);
+                        peripheral.update_properties(args);
+                        manager.add_peripheral(peripheral);
+                        manager.emit(CentralEvent::DeviceDiscovered(address.into()));
+                    }
                 }
             }),
         )
